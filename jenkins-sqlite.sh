@@ -13,4 +13,4 @@ export SYNAPSE_CACHE_FACTOR=1
 
 ./sytest/jenkins/install_and_run.sh \
     --synapse-directory $WORKSPACE \
-    -vv --log-rotation-size 0
+    -vv -Elog-rotation-size=0
