@@ -126,9 +126,15 @@ class LoggingConfig(Config):
                     DEFAULT_LOG_CONFIG.substitute(log_file=config["log_file"])
                 )
 
+    def setup_logging(self):
+        self.setup_logging(
+            self.log_config, self.log_file, self.verbosity,
+            redirect_stdio = not self.no_redirect_stdio,
+        )
 
-def setup_logging(log_config=None, log_file=None, verbosity=None,
-                  redirect_stdio=False):
+
+def _setup_logging(log_config=None, log_file=None, verbosity=None,
+                   redirect_stdio=True):
     log_format = (
         "%(asctime)s - %(name)s - %(lineno)d - %(levelname)s - %(request)s"
         " - %(message)s"

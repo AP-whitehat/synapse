@@ -160,8 +160,7 @@ def start(config_options):
 
     assert config.worker_app == "synapse.app.federation_sender"
 
-    setup_logging(config.worker_log_config, config.worker_log_file,
-                  redirect_stdio=not config.no_redirect_stdio)
+    setup_logging(config.worker_log_config, config.worker_log_file)
 
     events.USE_FROZEN_DICTS = config.use_frozen_dicts
 
