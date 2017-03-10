@@ -25,6 +25,7 @@ class ServerConfig(Config):
         self.web_client_location = config.get("web_client_location", None)
         self.soft_file_limit = config["soft_file_limit"]
         self.daemonize = config.get("daemonize")
+        self.no_redirect_stdio = config.get("no_redirect_stdio", False)
         self.print_pidfile = config.get("print_pidfile")
         self.user_agent_suffix = config.get("user_agent_suffix")
         self.use_frozen_dicts = config.get("use_frozen_dicts", False)
@@ -225,6 +226,8 @@ class ServerConfig(Config):
             self.manhole = args.manhole
         if args.daemonize is not None:
             self.daemonize = args.daemonize
+        if args.no_redirect_stdio is not None:
+            self.no_redirect_stdio = args.no_redirect_stdio
         if args.print_pidfile is not None:
             self.print_pidfile = args.print_pidfile
 
@@ -233,6 +236,11 @@ class ServerConfig(Config):
         server_group.add_argument("-D", "--daemonize", action='store_true',
                                   default=None,
                                   help="Daemonize the home server")
+        server_group.add_argument("-n", "--no-redirect-stdio",
+                                  action='store_true',
+                                  default=None,
+                                  help="Do not redirect stdout/stderr to the "
+                                  "log")
         server_group.add_argument("--print-pidfile", action='store_true',
                                   default=None,
                                   help="Print the path to the pidfile just"

@@ -162,7 +162,8 @@ def start(config_options):
 
     assert config.worker_app == "synapse.app.federation_reader"
 
-    setup_logging(config.worker_log_config, config.worker_log_file)
+    setup_logging(config.worker_log_config, config.worker_log_file,
+                  redirect_stdio=not config.no_redirect_stdio)
 
     events.USE_FROZEN_DICTS = config.use_frozen_dicts
 
