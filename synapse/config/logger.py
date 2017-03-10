@@ -23,6 +23,7 @@ from string import Template
 import os
 import signal
 
+DEFAULT_LOG_ROTATION_SIZE = 1024 * 1024 * 100
 
 DEFAULT_LOG_CONFIG = Template("""
 version: 1
@@ -42,7 +43,7 @@ handlers:
     class: logging.handlers.RotatingFileHandler
     formatter: precise
     filename: ${log_file}
-    maxBytes: 104857600
+    maxBytes: ${maxBytes}
     backupCount: 10
     filters: [context]
   console:
@@ -72,18 +73,30 @@ class LoggingConfig(Config):
         self.no_redirect_stdio = config.get("no_redirect_stdio", False)
         self.log_config = self.abspath(config.get("log_config"))
         self.log_file = self.abspath(config.get("log_file"))
+        self.log_rotation_size = config.get("log_rotation_size",
+                                            DEFAULT_LOG_ROTATION_SIZE)
+        self.log_backup_count = config.get("log_backup_count", 3)
 
     def default_config(self, config_dir_path, server_name, **kwargs):
         log_file = self.abspath("homeserver.log")
         log_config = self.abspath(
             os.path.join(config_dir_path, server_name + ".log.config")
         )
+        log_rotation_size = DEFAULT_LOG_ROTATION_SIZE
         return """
         # Logging verbosity level. Ignored if log_config is specified.
         verbose: 0
 
         # File to write logging to. Ignored if log_config is specified.
         log_file: "%(log_file)s"
+
+        # Size of log file at which it should be rotated. Zero to disable rotation.
+        # Ignored if log_config is specified.
+        log_rotation_size: %(log_rotation_size)i
+
+        # Number of backups to keep when the logfile is rotated.
+        # Ignored if log_config is specified.
+        log_backup_count: 3
 
         # A yaml python logging config file
         log_config: "%(log_config)s"
@@ -98,6 +111,8 @@ class LoggingConfig(Config):
             self.log_config = args.log_config
         if args.log_file is not None:
             self.log_file = args.log_file
+        if args.log_rotation_size is not None:
+            self.log_rotation_size = args.log_rotation_size
 
     def add_arguments(cls, parser):
         logging_group = parser.add_argument_group("logging")
@@ -109,6 +124,11 @@ class LoggingConfig(Config):
         logging_group.add_argument(
             '-f', '--log-file', dest="log_file",
             help="File to log to. (Ignored if --log-config is specified.)"
+        )
+        logging_group.add_argument(
+            '--log-rotation-size', type=int,
+            help="Size of log file at which it should be rotated. Zero to "
+            "disable rotation. (Ignored if --log-config is specified.)"
         )
         logging_group.add_argument(
             '--log-config', dest="log_config", default=None,
@@ -125,7 +145,10 @@ class LoggingConfig(Config):
         if log_config and not os.path.exists(log_config):
             with open(log_config, "wb") as log_config_file:
                 log_config_file.write(
-                    DEFAULT_LOG_CONFIG.substitute(log_file=config["log_file"])
+                    DEFAULT_LOG_CONFIG.substitute(
+                        log_file=config["log_file"],
+                        maxBytes=DEFAULT_LOG_ROTATION_SIZE,
+                    )
                 )
 
 
@@ -165,9 +188,9 @@ def setup_logging(config, use_worker_options=False):
 
         formatter = logging.Formatter(log_format)
         if log_file:
-            # TODO: Customisable file size / backup count
             handler = logging.handlers.RotatingFileHandler(
-                log_file, maxBytes=(1000 * 1000 * 100), backupCount=3
+                log_file, maxBytes=config.log_rotation_size,
+                backupCount=config.log_backup_count
             )
 
             def sighup(signum, stack):
