@@ -53,7 +53,7 @@ class ThumbnailResource(Resource):
         width = parse_integer(request, "width")
         height = parse_integer(request, "height")
         method = parse_string(request, "method", "scale")
-        m_type = parse_string(request, "type", "image/png")
+        m_type = parse_string(request, "type", "image/jpeg")
 
         if server_name == self.server_name:
             if self.dynamic_thumbnails:
